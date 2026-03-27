@@ -1,60 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
   <defs>
-    <linearGradient id="bgG" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#0F1623"/>
-      <stop offset="100%" stop-color="#1A2540"/>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#E2C472"/><stop offset="100%" stop-color="#A87C2A"/>
     </linearGradient>
-    <linearGradient id="barG" x1="0" y1="1" x2="0" y2="0">
-      <stop offset="0%" stop-color="#2563EB"/>
-      <stop offset="100%" stop-color="#60A5FA"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0E0E0E"/><stop offset="100%" stop-color="#1A1A1A"/>
     </linearGradient>
-    <clipPath id="roundClip">
-      <rect width="200" height="200" rx="44" ry="44"/>
-    </clipPath>
   </defs>
-
-  <!-- Background -->
-  <rect width="200" height="200" rx="44" ry="44" fill="url(#bgG)"/>
-
-  <!-- Subtle grid lines -->
-  <g clip-path="url(#roundClip)" opacity="0.04">
-    <line x1="0" y1="50"  x2="200" y2="50"  stroke="white" stroke-width="1"/>
-    <line x1="0" y1="100" x2="200" y2="100" stroke="white" stroke-width="1"/>
-    <line x1="0" y1="150" x2="200" y2="150" stroke="white" stroke-width="1"/>
-    <line x1="50"  y1="0" x2="50"  y2="200" stroke="white" stroke-width="1"/>
-    <line x1="100" y1="0" x2="100" y2="200" stroke="white" stroke-width="1"/>
-    <line x1="150" y1="0" x2="150" y2="200" stroke="white" stroke-width="1"/>
-  </g>
-
-  <!-- Bar chart — 4 rising bars -->
-  <g clip-path="url(#roundClip)">
-    <!-- Bar 1 -->
-    <rect x="34" y="128" width="24" height="40" rx="5" fill="url(#barG)" opacity="0.45"/>
-    <!-- Bar 2 -->
-    <rect x="68" y="108" width="24" height="60" rx="5" fill="url(#barG)" opacity="0.60"/>
-    <!-- Bar 3 -->
-    <rect x="102" y="82" width="24" height="86" rx="5" fill="url(#barG)" opacity="0.80"/>
-    <!-- Bar 4 (tallest) -->
-    <rect x="136" y="52" width="24" height="116" rx="5" fill="url(#barG)"/>
-  </g>
-
-  <!-- Upward trend line over bars -->
-  <polyline
-    points="46,120 80,100 114,76 148,46"
-    fill="none"
-    stroke="#93C5FD"
-    stroke-width="3.5"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    opacity="0.9"
-    clip-path="url(#roundClip)"
-  />
-
-  <!-- Dot at tip of line -->
-  <circle cx="148" cy="46" r="5" fill="#BFDBFE" clip-path="url(#roundClip)"/>
-
-  <!-- Bottom divider line -->
-  <line x1="28" y1="172" x2="172" y2="172"
-    stroke="rgba(255,255,255,0.1)" stroke-width="1"
-    clip-path="url(#roundClip)"/>
+  <rect width="200" height="200" rx="36" fill="url(#bg)"/>
+  <rect x="2" y="2" width="196" height="196" rx="35" fill="none" stroke="url(#gold)" stroke-width="1.5" opacity="0.5"/>
+  <rect x="38" y="56" width="124" height="20" rx="4" fill="url(#gold)"/>
+  <rect x="90" y="76" width="20" height="70" rx="4" fill="url(#gold)"/>
+  <polyline points="136,68 155,44 168,50" fill="none" stroke="url(#gold)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+  <circle cx="155" cy="44" r="4.5" fill="#E2C472"/>
+  <line x1="55" y1="162" x2="145" y2="162" stroke="#C9A84C" stroke-width="1.5" opacity="0.35"/>
+  <line x1="65" y1="173" x2="135" y2="173" stroke="#C9A84C" stroke-width="1.5" opacity="0.2"/>
 </svg>

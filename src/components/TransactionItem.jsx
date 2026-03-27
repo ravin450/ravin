@@ -17,12 +17,15 @@ export default function TransactionItem({ transaction, onEdit }) {
   }
 
   return (
-    <div className="flex items-center gap-3 px-3 py-3 rounded-xl transition-colors cursor-pointer"
+    <div className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all cursor-pointer active:scale-[0.99]"
       style={{ background: 'var(--surface)', border: '1px solid rgba(255,255,255,0.05)' }}
       onClick={() => setShowActions(!showActions)}>
 
       <div className="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0"
-        style={{ background: 'var(--surface-2)' }}>
+        style={{
+          background: isIncome ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
+          border: `1px solid ${isIncome ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'}`
+        }}>
         {category?.icon || '📦'}
       </div>
 
@@ -37,7 +40,7 @@ export default function TransactionItem({ transaction, onEdit }) {
 
       <div className="flex items-center gap-2 flex-shrink-0">
         <span className="font-bold text-sm"
-          style={{ color: isIncome ? '#10B981' : '#F87171' }}>
+          style={{ color: isIncome ? 'var(--income)' : 'var(--expense)' }}>
           {isIncome ? '+' : '−'}{formatCurrency(transaction.amount)}
         </span>
         {showActions && (
@@ -49,7 +52,7 @@ export default function TransactionItem({ transaction, onEdit }) {
             </button>
             <button onClick={handleDelete}
               className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-              style={{ background: confirmDelete ? '#DC2626' : 'rgba(248,113,113,0.12)', color: confirmDelete ? '#fff' : '#F87171' }}>
+              style={{ background: confirmDelete ? '#DC2626' : 'rgba(239,68,68,0.1)', color: confirmDelete ? '#fff' : '#EF4444' }}>
               <Trash2 size={12} />
             </button>
           </div>

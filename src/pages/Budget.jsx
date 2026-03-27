@@ -7,60 +7,46 @@ import PageHeader from '../components/PageHeader'
 
 function BudgetModal({ isOpen, onClose, budget = null }) {
   const { addBudget, updateBudget, budgets } = useFinance()
-  const [form, setForm] = useState({
-    category: budget?.category || '',
-    limit: budget?.limit?.toString() || '',
-  })
+  const [form, setForm] = useState({ category: budget?.category || '', limit: budget?.limit?.toString() || '' })
   const [errors, setErrors] = useState({})
-
   const isEditing = !!budget
 
-  const usedCategories = budgets
-    .filter((b) => !budget || b.id !== budget.id)
-    .map((b) => b.category)
-
-  const availableCategories = EXPENSE_CATEGORIES.filter(
-    (c) => !usedCategories.includes(c.id)
-  )
+  const usedCategories = budgets.filter((b) => !budget || b.id !== budget.id).map((b) => b.category)
+  const availableCategories = EXPENSE_CATEGORIES.filter((c) => !usedCategories.includes(c.id))
 
   if (!isOpen) return null
 
   const validate = () => {
-    const newErrors = {}
-    if (!form.category) newErrors.category = 'Selecione uma categoria'
-    if (!form.limit || parseFloat(form.limit) <= 0) newErrors.limit = 'Informe um limite válido'
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    const e = {}
+    if (!form.category) e.category = 'Selecione uma categoria'
+    if (!form.limit || parseFloat(form.limit) <= 0) e.limit = 'Informe um limite válido'
+    setErrors(e)
+    return Object.keys(e).length === 0
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!validate()) return
-    const data = {
-      category: form.category,
-      limit: parseFloat(form.limit.replace(',', '.')),
-      period: 'monthly',
-    }
-    if (isEditing) {
-      updateBudget(budget.id, data)
-    } else {
-      addBudget(data)
-    }
+    const data = { category: form.category, limit: parseFloat(form.limit.replace(',', '.')), period: 'monthly' }
+    isEditing ? updateBudget(budget.id, data) : addBudget(data)
     onClose()
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-end modal-overlay" onClick={onClose}>
-      <div
-        className="w-full max-w-md mx-auto bg-white rounded-t-3xl shadow-2xl modal-content"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="gradient-main px-5 pt-6 pb-5 rounded-t-3xl flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">
-            {isEditing ? 'Editar Orçamento' : 'Novo Orçamento'}
-          </h2>
-          <button onClick={onClose} className="p-2 rounded-full bg-white/20 text-white">
-            <X size={20} />
+      <div className="w-full max-w-md mx-auto rounded-t-3xl shadow-2xl modal-content"
+        style={{ background: '#111111', border: '1px solid rgba(201,168,76,0.15)', borderBottom: 'none' }}
+        onClick={(e) => e.stopPropagation()}>
+
+        <div className="px-5 pt-6 pb-4 flex items-center justify-between"
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div>
+            <h2 className="text-xl font-bold text-white">{isEditing ? 'Editar Orçamento' : 'Novo Orçamento'}</h2>
+            <div className="gold-bar mt-1.5" style={{ width: 32 }} />
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+            style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--text-dim)' }}>
+            <X size={16} />
           </button>
         </div>
 
@@ -68,58 +54,45 @@ function BudgetModal({ isOpen, onClose, budget = null }) {
           <div>
             <label className="label">Categoria</label>
             {isEditing ? (
-              <div className="input-field flex items-center gap-2 cursor-not-allowed opacity-70">
+              <div className="input-field flex items-center gap-2 opacity-70 cursor-not-allowed">
                 {EXPENSE_CATEGORIES.find((c) => c.id === form.category)?.icon}{' '}
                 {EXPENSE_CATEGORIES.find((c) => c.id === form.category)?.label}
               </div>
             ) : (
               <div className="grid grid-cols-4 gap-2">
                 {availableCategories.map((cat) => (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => setForm({ ...form, category: cat.id })}
-                    className={`flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all ${
-                      form.category === cat.id
-                        ? 'border-primary-500 bg-primary-50'
-                        : 'border-gray-100 bg-gray-50'
-                    }`}
-                  >
+                  <button key={cat.id} type="button" onClick={() => setForm({ ...form, category: cat.id })}
+                    className="flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all"
+                    style={{
+                      borderColor: form.category === cat.id ? 'var(--gold)' : 'rgba(255,255,255,0.06)',
+                      background: form.category === cat.id ? 'rgba(201,168,76,0.1)' : 'var(--surface-2)'
+                    }}>
                     <span className="text-xl">{cat.icon}</span>
-                    <span className="text-[10px] font-medium text-gray-600 text-center leading-tight">
+                    <span className="text-[10px] font-medium text-center leading-tight"
+                      style={{ color: form.category === cat.id ? 'var(--gold)' : 'var(--text-muted)' }}>
                       {cat.label}
                     </span>
                   </button>
                 ))}
               </div>
             )}
-            {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
-            {availableCategories.length === 0 && !isEditing && (
-              <p className="text-gray-500 text-xs mt-2 text-center">Todas as categorias já possuem orçamento</p>
-            )}
+            {errors.category && <p className="text-red-400 text-xs mt-1">{errors.category}</p>}
           </div>
 
           <div>
             <label className="label">Limite Mensal (R$)</label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">R$</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                step="0.01"
-                min="0"
-                placeholder="0,00"
-                value={form.limit}
-                onChange={(e) => setForm({ ...form, limit: e.target.value })}
-                className={`input-field pl-10 text-lg font-bold ${errors.limit ? 'border-red-400' : ''}`}
-              />
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 font-semibold text-sm" style={{ color: 'var(--gold)' }}>R$</span>
+              <input type="number" inputMode="decimal" step="0.01" min="0" placeholder="0,00"
+                value={form.limit} onChange={(e) => setForm({ ...form, limit: e.target.value })}
+                className={`input-field pl-10 text-lg font-bold ${errors.limit ? 'border-red-400' : ''}`} />
             </div>
-            {errors.limit && <p className="text-red-500 text-xs mt-1">{errors.limit}</p>}
+            {errors.limit && <p className="text-red-400 text-xs mt-1">{errors.limit}</p>}
           </div>
 
-          <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2">
+          <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2 font-bold tracking-wide">
             <Check size={18} />
-            {isEditing ? 'Salvar' : 'Criar Orçamento'}
+            {isEditing ? 'Salvar Alterações' : 'Criar Orçamento'}
           </button>
         </form>
       </div>
@@ -132,93 +105,71 @@ function BudgetCard({ budget, onEdit }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const cat = EXPENSE_CATEGORIES.find((c) => c.id === budget.category)
 
-  const getBarColor = () => {
-    if (budget.isOver) return 'bg-red-500'
-    if (budget.percentage >= 80) return 'bg-yellow-500'
-    return 'bg-primary-500'
-  }
-
-  const getStatusColor = () => {
-    if (budget.isOver) return 'text-red-600 bg-red-50'
-    if (budget.percentage >= 80) return 'text-yellow-700 bg-yellow-50'
-    return 'text-emerald-700 bg-emerald-50'
-  }
+  const pct = Math.min(budget.percentage, 100)
+  const barColor = budget.isOver ? '#EF4444' : budget.percentage >= 80 ? '#F59E0B' : '#C9A84C'
+  const glowColor = budget.isOver ? 'rgba(239,68,68,0.3)' : budget.percentage >= 80 ? 'rgba(245,158,11,0.3)' : 'rgba(201,168,76,0.3)'
 
   const handleDelete = () => {
-    if (confirmDelete) {
-      deleteBudget(budget.id)
-    } else {
-      setConfirmDelete(true)
-      setTimeout(() => setConfirmDelete(false), 3000)
-    }
+    if (confirmDelete) deleteBudget(budget.id)
+    else { setConfirmDelete(true); setTimeout(() => setConfirmDelete(false), 3000) }
   }
 
   return (
-    <div className="card">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2.5">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
-            style={{ backgroundColor: (cat?.color || '#6b7280') + '20' }}
-          >
+    <div className="card" style={{ borderColor: budget.isOver ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)' }}>
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl flex items-center justify-center text-xl"
+            style={{ background: (cat?.color || '#666') + '18', border: `1px solid ${cat?.color || '#666'}25` }}>
             {cat?.icon || '📦'}
           </div>
           <div>
-            <p className="font-semibold text-gray-800">{cat?.label || budget.category}</p>
-            <p className="text-xs text-gray-400">Limite: {formatCurrency(budget.limit)}</p>
+            <p className="font-semibold text-white">{cat?.label || budget.category}</p>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Limite: {formatCurrency(budget.limit)}</p>
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <button
-            onClick={() => onEdit(budget)}
-            className="p-1.5 rounded-lg bg-gray-50 text-gray-500 hover:bg-primary-50 hover:text-primary-600 transition-colors"
-          >
-            <Pencil size={14} />
+          <button onClick={() => onEdit(budget)}
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+            style={{ background: 'var(--surface-2)', color: 'var(--text-dim)' }}>
+            <Pencil size={13} />
           </button>
-          <button
-            onClick={handleDelete}
-            className={`p-1.5 rounded-lg transition-colors ${
-              confirmDelete
-                ? 'bg-red-500 text-white'
-                : 'bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-500'
-            }`}
-          >
-            <Trash2 size={14} />
+          <button onClick={handleDelete}
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+            style={{
+              background: confirmDelete ? '#DC2626' : 'rgba(239,68,68,0.08)',
+              color: confirmDelete ? '#fff' : '#EF4444'
+            }}>
+            <Trash2 size={13} />
           </button>
         </div>
       </div>
 
-      {/* Progress Bar */}
-      <div className="mb-2">
-        <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
-          <div
-            className={`h-2.5 rounded-full transition-all duration-500 ${getBarColor()}`}
-            style={{ width: `${Math.min(budget.percentage, 100)}%` }}
-          />
+      {/* Progress */}
+      <div className="mb-3">
+        <div className="flex justify-between items-center mb-1.5">
+          <span className="text-xs font-medium" style={{ color: barColor }}>
+            {formatPercent(budget.percentage)} utilizado
+          </span>
+          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            {formatCurrency(budget.spent)} / {formatCurrency(budget.limit)}
+          </span>
+        </div>
+        <div className="w-full rounded-full h-2" style={{ background: 'rgba(255,255,255,0.06)' }}>
+          <div className="h-2 rounded-full transition-all duration-700"
+            style={{ width: `${pct}%`, background: barColor, boxShadow: `0 0 8px ${glowColor}` }} />
         </div>
       </div>
 
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          {budget.isOver && <AlertCircle size={12} className="text-red-500" />}
-          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${getStatusColor()}`}>
-            {budget.isOver
-              ? `${formatCurrency(Math.abs(budget.remaining))} acima`
-              : `${formatCurrency(budget.remaining)} restante`}
-          </span>
-        </div>
-        <div className="text-right">
-          <span className="text-sm font-bold text-gray-700">{formatCurrency(budget.spent)}</span>
-          <span className="text-xs text-gray-400"> / {formatCurrency(budget.limit)}</span>
-        </div>
+        <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
+          style={{
+            background: budget.isOver ? 'rgba(239,68,68,0.1)' : budget.percentage >= 80 ? 'rgba(245,158,11,0.1)' : 'rgba(34,197,94,0.1)',
+            color: budget.isOver ? '#EF4444' : budget.percentage >= 80 ? '#F59E0B' : '#22C55E'
+          }}>
+          {budget.isOver ? `${formatCurrency(Math.abs(budget.remaining))} acima` : `${formatCurrency(budget.remaining)} restante`}
+        </span>
+        {budget.isOver && <AlertCircle size={14} color="#EF4444" />}
       </div>
-
-      {budget.percentage >= 80 && !budget.isOver && (
-        <div className="mt-2 flex items-center gap-1.5 text-yellow-600 bg-yellow-50 rounded-lg px-2.5 py-1.5">
-          <AlertCircle size={12} />
-          <p className="text-xs font-medium">Atenção: {formatPercent(budget.percentage)} utilizado</p>
-        </div>
-      )}
     </div>
   )
 }
@@ -231,93 +182,89 @@ export default function Budget() {
   const totalLimit = budgetSpending.reduce((s, b) => s + b.limit, 0)
   const totalSpent = budgetSpending.reduce((s, b) => s + b.spent, 0)
   const totalPct = totalLimit > 0 ? (totalSpent / totalLimit) * 100 : 0
-  const overBudgetCount = budgetSpending.filter((b) => b.isOver).length
+  const overCount = budgetSpending.filter((b) => b.isOver).length
 
-  const handleEdit = (budget) => {
-    setEditingBudget(budget)
-    setModalOpen(true)
-  }
-
-  const handleClose = () => {
-    setModalOpen(false)
-    setEditingBudget(null)
-  }
+  const handleEdit = (b) => { setEditingBudget(b); setModalOpen(true) }
+  const handleClose = () => { setModalOpen(false); setEditingBudget(null) }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <PageHeader
-        title="Orçamento"
-        subtitle="Controle seus gastos mensais"
+    <div className="min-h-screen bg-page">
+      <PageHeader title="Orçamento" subtitle="Controle seus gastos mensais"
         action={
-          <button
-            onClick={() => setModalOpen(true)}
-            className="bg-white/20 hover:bg-white/30 text-white p-2 rounded-xl transition-colors"
-          >
-            <Plus size={22} />
+          <button onClick={() => setModalOpen(true)}
+            className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
+            style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.2)', color: 'var(--gold)' }}>
+            <Plus size={20} />
           </button>
         }
       />
 
-      <div className="px-4 -mt-3 pb-6 space-y-4">
-        {/* Overview Card */}
+      <div className="px-4 pt-4 pb-6 space-y-4">
+
+        {/* Overview */}
         <div className="card">
-          <h3 className="font-bold text-gray-800 mb-1">Visão Geral do Mês</h3>
-          <p className="text-xs text-gray-400 mb-3">Total de todos os orçamentos</p>
+          <h3 className="font-bold text-white mb-0.5">Visão Geral</h3>
+          <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Total de todos os orçamentos</p>
+          <div className="gold-bar mb-4" style={{ width: 24 }} />
+
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">
+            <span className="text-sm" style={{ color: 'var(--text-dim)' }}>
               {formatCurrency(totalSpent)} de {formatCurrency(totalLimit)}
             </span>
-            <span className={`text-sm font-bold ${totalPct > 100 ? 'text-red-600' : totalPct >= 80 ? 'text-yellow-600' : 'text-emerald-600'}`}>
+            <span className="text-sm font-bold"
+              style={{ color: totalPct > 100 ? '#EF4444' : totalPct >= 80 ? '#F59E0B' : '#22C55E' }}>
               {formatPercent(totalPct)}
             </span>
           </div>
-          <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-            <div
-              className={`h-3 rounded-full transition-all duration-500 ${
-                totalPct > 100 ? 'bg-red-500' : totalPct >= 80 ? 'bg-yellow-500' : 'bg-primary-500'
-              }`}
-              style={{ width: `${Math.min(totalPct, 100)}%` }}
-            />
+
+          <div className="w-full rounded-full h-2.5 overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+            <div className="h-2.5 rounded-full transition-all duration-700"
+              style={{
+                width: `${Math.min(totalPct, 100)}%`,
+                background: totalPct > 100 ? '#EF4444' : totalPct >= 80 ? '#F59E0B' : 'linear-gradient(90deg, #C9A84C, #E2C472)',
+                boxShadow: `0 0 10px ${totalPct > 100 ? 'rgba(239,68,68,0.4)' : 'rgba(201,168,76,0.35)'}`
+              }} />
           </div>
-          {overBudgetCount > 0 && (
-            <div className="mt-2 flex items-center gap-1.5 text-red-600 bg-red-50 rounded-lg px-2.5 py-1.5">
-              <AlertCircle size={12} />
-              <p className="text-xs font-medium">
-                {overBudgetCount} categoria{overBudgetCount > 1 ? 's' : ''} acima do orçamento
+
+          {overCount > 0 && (
+            <div className="mt-3 flex items-center gap-1.5 rounded-lg px-3 py-2"
+              style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)' }}>
+              <AlertCircle size={12} color="#EF4444" />
+              <p className="text-xs font-medium" style={{ color: '#EF4444' }}>
+                {overCount} categoria{overCount > 1 ? 's' : ''} acima do orçamento
               </p>
             </div>
           )}
         </div>
 
-        {/* Budget Cards */}
+        {/* Cards */}
         {budgetSpending.length === 0 ? (
           <div className="card text-center py-12">
-            <p className="text-4xl mb-3">📊</p>
-            <p className="text-gray-600 font-semibold">Nenhum orçamento definido</p>
-            <p className="text-gray-400 text-sm mt-1">Crie orçamentos para controlar seus gastos</p>
-            <button
-              onClick={() => setModalOpen(true)}
-              className="btn-primary mt-4 mx-auto flex items-center gap-2"
-            >
-              <Plus size={16} />
-              Criar Orçamento
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3"
+              style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.15)' }}>
+              <span className="text-2xl">📊</span>
+            </div>
+            <p className="text-white font-semibold">Nenhum orçamento definido</p>
+            <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Crie orçamentos para controlar seus gastos</p>
+            <button onClick={() => setModalOpen(true)} className="btn-primary mt-4 mx-auto flex items-center gap-2">
+              <Plus size={16} /> Criar Orçamento
             </button>
           </div>
         ) : (
           <div className="space-y-3">
-            {budgetSpending.map((budget) => (
-              <BudgetCard key={budget.id} budget={budget} onEdit={handleEdit} />
-            ))}
+            {budgetSpending.map((b) => <BudgetCard key={b.id} budget={b} onEdit={handleEdit} />)}
           </div>
         )}
 
         {budgetSpending.length > 0 && (
-          <button
-            onClick={() => setModalOpen(true)}
-            className="w-full border-2 border-dashed border-primary-200 text-primary-600 rounded-2xl py-4 flex items-center justify-center gap-2 font-semibold text-sm hover:bg-primary-50 transition-colors"
-          >
-            <Plus size={18} />
-            Novo Orçamento
+          <button onClick={() => setModalOpen(true)}
+            className="w-full rounded-2xl py-4 flex items-center justify-center gap-2 font-semibold text-sm transition-colors"
+            style={{
+              border: '1.5px dashed rgba(201,168,76,0.3)',
+              color: 'var(--gold)',
+              background: 'rgba(201,168,76,0.04)'
+            }}>
+            <Plus size={18} /> Novo Orçamento
           </button>
         )}
       </div>
