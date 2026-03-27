@@ -1,0 +1,19 @@
+{
+  "name": "FinançasPro",
+  "short_name": "Finanças",
+  "description": "Gerencie suas finanças pessoais com facilidade",
+  "theme_color": "#1e1b4b",
+  "background_color": "#1e1b4b",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
