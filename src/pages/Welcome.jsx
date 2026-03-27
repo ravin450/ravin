@@ -60,11 +60,11 @@ export default function Welcome() {
         <div className="text-center mb-2">
           <h1 className="text-2xl font-bold tracking-widest uppercase"
             style={{ color: '#E2C472', letterSpacing: '0.22em', fontWeight: 800 }}>
-            TerraRica
+            Cultivei
           </h1>
           <div className="gold-bar mt-2 mx-auto" style={{ width: 48 }} />
           <p className="text-xs uppercase tracking-widest mt-2" style={{ color: 'var(--text-muted)', letterSpacing: '0.18em' }}>
-            Finanças do Campo
+            Finanças com propósito
           </p>
         </div>
 
@@ -108,7 +108,7 @@ export default function Welcome() {
             opacity: name.trim() ? 1 : 0.5,
             letterSpacing: '0.06em',
           }}>
-          Entrar no TerraRica
+          Entrar no Cultivei
           <ArrowRight size={16} />
         </button>
       </div>

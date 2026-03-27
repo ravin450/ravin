@@ -73,7 +73,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0"
               style={{ border: '1px solid rgba(201,168,76,0.25)' }}>
-              <img src="/favicon.svg" alt="TerraRica" className="w-10 h-10" />
+              <img src="/favicon.svg" alt="Cultivei" className="w-10 h-10" />
             </div>
             <div>
               <p style={{ color: 'var(--text-muted)' }} className="text-xs leading-none mb-0.5">{greeting},</p>
