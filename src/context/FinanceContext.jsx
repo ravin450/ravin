@@ -1,239 +1,153 @@
-import React, { createContext, useContext, useMemo, useCallback } from 'react'
-import { useLocalStorage } from '../hooks/useLocalStorage'
+import React, { createContext, useContext, useMemo, useCallback, useState, useEffect } from 'react'
+import { db } from '../lib/firebase'
+import {
+  collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, orderBy, query
+} from 'firebase/firestore'
 
 const FinanceContext = createContext(null)
 
-function getUserKey(userName, suffix) {
-  const normalized = (userName || 'guest')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\s+/g, '_')
-    .replace(/[^a-z0-9_]/g, '')
-  return `tr_${normalized}_${suffix}`
-}
+export function FinanceProvider({ householdId, children }) {
+  const [transactions, setTransactions] = useState([])
+  const [budgets, setBudgets]           = useState([])
+  const [goals, setGoals]               = useState([])
+  const [loading, setLoading]           = useState(true)
 
-export function FinanceProvider({ userName, children }) {
-  const txKey      = getUserKey(userName, 'transactions')
-  const budgetKey  = getUserKey(userName, 'budgets')
-  const goalKey    = getUserKey(userName, 'goals')
+  useEffect(() => {
+    if (!householdId) return
 
-  const [transactions, setTransactions] = useLocalStorage(txKey, [])
-  const [budgets, setBudgets]           = useLocalStorage(budgetKey, [])
-  const [goals, setGoals]               = useLocalStorage(goalKey, [])
+    let loaded = 0
+    const done = () => { loaded++; if (loaded >= 3) setLoading(false) }
 
-  // --- Transactions ---
-  const addTransaction = useCallback((transaction) => {
-    const newTransaction = {
+    const txQ      = query(collection(db, 'households', householdId, 'transactions'))
+    const budgetQ  = query(collection(db, 'households', householdId, 'budgets'))
+    const goalQ    = query(collection(db, 'households', householdId, 'goals'))
+
+    const unsubTx     = onSnapshot(txQ,     snap => { setTransactions(snap.docs.map(d => ({ id: d.id, ...d.data() }))); done() })
+    const unsubBudget = onSnapshot(budgetQ, snap => { setBudgets(snap.docs.map(d => ({ id: d.id, ...d.data() }))); done() })
+    const unsubGoal   = onSnapshot(goalQ,   snap => { setGoals(snap.docs.map(d => ({ id: d.id, ...d.data() }))); done() })
+
+    return () => { unsubTx(); unsubBudget(); unsubGoal() }
+  }, [householdId])
+
+  // ── Transactions ──
+  const addTransaction = useCallback(async (transaction) => {
+    await addDoc(collection(db, 'households', householdId, 'transactions'), {
       ...transaction,
-      id: Date.now().toString(),
-      date: transaction.date || new Date().toISOString(),
-    }
-    setTransactions((prev) => [newTransaction, ...prev])
-  }, [setTransactions])
+      createdAt: serverTimestamp(),
+    })
+  }, [householdId])
 
-  const updateTransaction = useCallback((id, updates) => {
-    setTransactions((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, ...updates } : t))
-    )
-  }, [setTransactions])
+  const updateTransaction = useCallback(async (id, updates) => {
+    await updateDoc(doc(db, 'households', householdId, 'transactions', id), updates)
+  }, [householdId])
 
-  const deleteTransaction = useCallback((id) => {
-    setTransactions((prev) => prev.filter((t) => t.id !== id))
-  }, [setTransactions])
+  const deleteTransaction = useCallback(async (id) => {
+    await deleteDoc(doc(db, 'households', householdId, 'transactions', id))
+  }, [householdId])
 
-  // --- Budgets ---
-  const addBudget = useCallback((budget) => {
-    const newBudget = { ...budget, id: Date.now().toString() }
-    setBudgets((prev) => [...prev, newBudget])
-  }, [setBudgets])
+  // ── Budgets ──
+  const addBudget = useCallback(async (budget) => {
+    await addDoc(collection(db, 'households', householdId, 'budgets'), budget)
+  }, [householdId])
 
-  const updateBudget = useCallback((id, updates) => {
-    setBudgets((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, ...updates } : b))
-    )
-  }, [setBudgets])
+  const updateBudget = useCallback(async (id, updates) => {
+    await updateDoc(doc(db, 'households', householdId, 'budgets', id), updates)
+  }, [householdId])
 
-  const deleteBudget = useCallback((id) => {
-    setBudgets((prev) => prev.filter((b) => b.id !== id))
-  }, [setBudgets])
+  const deleteBudget = useCallback(async (id) => {
+    await deleteDoc(doc(db, 'households', householdId, 'budgets', id))
+  }, [householdId])
 
-  // --- Goals ---
-  const addGoal = useCallback((goal) => {
-    const newGoal = { ...goal, id: Date.now().toString() }
-    setGoals((prev) => [...prev, newGoal])
-  }, [setGoals])
+  // ── Goals ──
+  const addGoal = useCallback(async (goal) => {
+    await addDoc(collection(db, 'households', householdId, 'goals'), goal)
+  }, [householdId])
 
-  const updateGoal = useCallback((id, updates) => {
-    setGoals((prev) =>
-      prev.map((g) => (g.id === id ? { ...g, ...updates } : g))
-    )
-  }, [setGoals])
+  const updateGoal = useCallback(async (id, updates) => {
+    await updateDoc(doc(db, 'households', householdId, 'goals', id), updates)
+  }, [householdId])
 
-  const deleteGoal = useCallback((id) => {
-    setGoals((prev) => prev.filter((g) => g.id !== id))
-  }, [setGoals])
+  const deleteGoal = useCallback(async (id) => {
+    await deleteDoc(doc(db, 'households', householdId, 'goals', id))
+  }, [householdId])
 
-  // --- Computed Stats ---
+  // ── Stats ──
   const stats = useMemo(() => {
     const now = new Date()
-    const currentMonth = now.getMonth()
-    const currentYear = now.getFullYear()
+    const m = now.getMonth(), y = now.getFullYear()
 
-    const monthlyTransactions = transactions.filter((t) => {
+    const monthly = transactions.filter(t => {
       const d = new Date(t.date)
-      return d.getMonth() === currentMonth && d.getFullYear() === currentYear
+      return d.getMonth() === m && d.getFullYear() === y
     })
 
-    const totalIncome = monthlyTransactions
-      .filter((t) => t.type === 'income')
-      .reduce((sum, t) => sum + t.amount, 0)
-
-    const totalExpenses = monthlyTransactions
-      .filter((t) => t.type === 'expense')
-      .reduce((sum, t) => sum + t.amount, 0)
-
-    const balance = totalIncome - totalExpenses
-    const savingsRate = totalIncome > 0
-      ? Math.max(0, ((totalIncome - totalExpenses) / totalIncome) * 100)
-      : 0
-
-    const allTimeIncome = transactions
-      .filter((t) => t.type === 'income')
-      .reduce((sum, t) => sum + t.amount, 0)
-    const allTimeExpenses = transactions
-      .filter((t) => t.type === 'expense')
-      .reduce((sum, t) => sum + t.amount, 0)
-    const totalBalance = allTimeIncome - allTimeExpenses
+    const monthlyIncome    = monthly.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
+    const monthlyExpenses  = monthly.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+    const allIncome        = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
+    const allExpenses      = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
 
     return {
-      totalBalance,
-      monthlyIncome: totalIncome,
-      monthlyExpenses: totalExpenses,
-      monthlyBalance: balance,
-      savingsRate,
-      monthlyTransactions,
+      totalBalance:       allIncome - allExpenses,
+      monthlyIncome,
+      monthlyExpenses,
+      monthlyBalance:     monthlyIncome - monthlyExpenses,
+      savingsRate:        monthlyIncome > 0 ? Math.max(0, ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100) : 0,
+      monthlyTransactions: monthly,
     }
   }, [transactions])
 
   const monthlyChartData = useMemo(() => {
     const now = new Date()
-    const data = []
-
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      const month = date.getMonth()
-      const year = date.getFullYear()
-
-      const monthTx = transactions.filter((t) => {
-        const d = new Date(t.date)
-        return d.getMonth() === month && d.getFullYear() === year
-      })
-
-      const income = monthTx
-        .filter((t) => t.type === 'income')
-        .reduce((sum, t) => sum + t.amount, 0)
-      const expenses = monthTx
-        .filter((t) => t.type === 'expense')
-        .reduce((sum, t) => sum + t.amount, 0)
-
-      const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
-      data.push({
-        name: monthNames[month],
-        receitas: income,
-        despesas: expenses,
-        saldo: income - expenses,
-      })
-    }
-
-    return data
+    const names = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
+    return Array.from({ length: 6 }, (_, i) => {
+      const d    = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1)
+      const m    = d.getMonth(), y = d.getFullYear()
+      const txs  = transactions.filter(t => { const td = new Date(t.date); return td.getMonth()===m && td.getFullYear()===y })
+      const receitas  = txs.filter(t => t.type==='income').reduce((s,t) => s+t.amount, 0)
+      const despesas  = txs.filter(t => t.type==='expense').reduce((s,t) => s+t.amount, 0)
+      return { name: names[m], receitas, despesas, saldo: receitas - despesas }
+    })
   }, [transactions])
 
   const categoryBreakdown = useMemo(() => {
     const now = new Date()
-    const currentMonth = now.getMonth()
-    const currentYear = now.getFullYear()
-
-    const expenses = transactions.filter((t) => {
-      const d = new Date(t.date)
-      return (
-        t.type === 'expense' &&
-        d.getMonth() === currentMonth &&
-        d.getFullYear() === currentYear
-      )
-    })
-
-    const breakdown = {}
-    expenses.forEach((t) => {
-      breakdown[t.category] = (breakdown[t.category] || 0) + t.amount
-    })
-
-    return Object.entries(breakdown).map(([category, amount]) => ({
-      category,
-      amount,
-    }))
+    const m = now.getMonth(), y = now.getFullYear()
+    const map = {}
+    transactions
+      .filter(t => t.type==='expense' && new Date(t.date).getMonth()===m && new Date(t.date).getFullYear()===y)
+      .forEach(t => { map[t.category] = (map[t.category]||0) + t.amount })
+    return Object.entries(map).map(([category, amount]) => ({ category, amount }))
   }, [transactions])
 
   const budgetSpending = useMemo(() => {
     const now = new Date()
-    const currentMonth = now.getMonth()
-    const currentYear = now.getFullYear()
-
-    const monthlyExpenses = transactions.filter((t) => {
+    const m = now.getMonth(), y = now.getFullYear()
+    const monthly = transactions.filter(t => {
       const d = new Date(t.date)
-      return (
-        t.type === 'expense' &&
-        d.getMonth() === currentMonth &&
-        d.getFullYear() === currentYear
-      )
+      return t.type==='expense' && d.getMonth()===m && d.getFullYear()===y
     })
-
-    return budgets.map((budget) => {
-      const spent = monthlyExpenses
-        .filter((t) => t.category === budget.category)
-        .reduce((sum, t) => sum + t.amount, 0)
+    return budgets.map(budget => {
+      const spent = monthly.filter(t => t.category===budget.category).reduce((s,t) => s+t.amount, 0)
       const percentage = budget.limit > 0 ? (spent / budget.limit) * 100 : 0
-
-      return {
-        ...budget,
-        spent,
-        remaining: budget.limit - spent,
-        percentage: Math.min(percentage, 100),
-        isOver: spent > budget.limit,
-      }
+      return { ...budget, spent, remaining: budget.limit - spent, percentage: Math.min(percentage, 100), isOver: spent > budget.limit }
     })
   }, [budgets, transactions])
 
-  const value = {
-    transactions,
-    budgets,
-    goals,
-    stats,
-    monthlyChartData,
-    categoryBreakdown,
-    budgetSpending,
-    addTransaction,
-    updateTransaction,
-    deleteTransaction,
-    addBudget,
-    updateBudget,
-    deleteBudget,
-    addGoal,
-    updateGoal,
-    deleteGoal,
-  }
-
   return (
-    <FinanceContext.Provider value={value}>
+    <FinanceContext.Provider value={{
+      transactions, budgets, goals, loading,
+      stats, monthlyChartData, categoryBreakdown, budgetSpending,
+      addTransaction, updateTransaction, deleteTransaction,
+      addBudget, updateBudget, deleteBudget,
+      addGoal, updateGoal, deleteGoal,
+    }}>
       {children}
     </FinanceContext.Provider>
   )
 }
 
 export function useFinance() {
-  const context = useContext(FinanceContext)
-  if (!context) {
-    throw new Error('useFinance must be used within a FinanceProvider')
-  }
-  return context
+  const ctx = useContext(FinanceContext)
+  if (!ctx) throw new Error('useFinance must be used within FinanceProvider')
+  return ctx
 }

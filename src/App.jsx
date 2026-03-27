@@ -10,21 +10,21 @@ import Goals from './pages/Goals'
 import Voice from './pages/Voice'
 import Welcome from './pages/Welcome'
 
-function RequireName({ children }) {
-  const name = localStorage.getItem('finance_user_name')
-  if (!name) return <Navigate to="/boas-vindas" replace />
+function RequireHousehold({ children }) {
+  const id = localStorage.getItem('cultivei_household_id')
+  if (!id) return <Navigate to="/boas-vindas" replace />
   return children
 }
 
 export default function App() {
-  const userName = localStorage.getItem('finance_user_name') || ''
+  const householdId = localStorage.getItem('cultivei_household_id') || ''
 
   return (
-    <FinanceProvider key={userName} userName={userName}>
+    <FinanceProvider key={householdId} householdId={householdId}>
       <Router>
         <Routes>
           <Route path="/boas-vindas" element={<Welcome />} />
-          <Route path="/" element={<RequireName><Layout /></RequireName>}>
+          <Route path="/" element={<RequireHousehold><Layout /></RequireHousehold>}>
             <Route index element={<Dashboard />} />
             <Route path="transacoes" element={<Transactions />} />
             <Route path="relatorios" element={<Reports />} />
