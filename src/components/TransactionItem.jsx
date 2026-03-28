@@ -1,15 +1,14 @@
 import React, { useState } from 'react'
 import { Pencil, Trash2, RefreshCw } from 'lucide-react'
-import { ALL_CATEGORIES } from '../utils/constants'
 import { formatCurrency, formatDateShort } from '../utils/formatters'
 import { useFinance } from '../context/FinanceContext'
 import CategoryIcon from './CategoryIcon'
 
 export default function TransactionItem({ transaction, onEdit }) {
-  const { deleteTransaction } = useFinance()
+  const { deleteTransaction, allCategories } = useFinance()
   const [showActions, setShowActions] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const category = ALL_CATEGORIES.find((c) => c.id === transaction.category)
+  const category = allCategories.find((c) => c.id === transaction.category)
   const isIncome = transaction.type === 'income'
 
   const handleDelete = () => {
@@ -23,7 +22,7 @@ export default function TransactionItem({ transaction, onEdit }) {
       onClick={() => setShowActions(!showActions)}>
 
       <div className="relative flex-shrink-0">
-        <CategoryIcon categoryId={transaction.category} size="md" />
+        <CategoryIcon categoryId={transaction.category} categoryMeta={category} size="md" />
         {transaction.recurring && (
           <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center"
             style={{ background: '#131720', border: '1px solid rgba(201,168,76,0.3)' }}>

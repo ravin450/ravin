@@ -56,13 +56,13 @@ function ChangeTag({ value }) {
 }
 
 export default function Reports() {
-  const { monthlyChartData, categoryBreakdown, stats, transactions } = useFinance()
+  const { monthlyChartData, categoryBreakdown, stats, transactions, allCategories } = useFinance()
   const [activeChart, setActiveChart] = useState('bar')
 
   const pieData = categoryBreakdown
     .map(({ category, amount }) => {
-      const cat = ALL_CATEGORIES.find((c) => c.id === category)
-      return { name: cat?.label || category, value: amount, color: cat?.color || '#666', categoryId: category }
+      const cat = allCategories.find((c) => c.id === category)
+      return { name: cat?.label || category, value: amount, color: cat?.color || '#666', categoryId: category, categoryMeta: cat }
     })
     .sort((a, b) => b.value - a.value)
 
@@ -254,7 +254,7 @@ export default function Reports() {
                       <div key={item.name}>
                         <div className="flex items-center justify-between mb-1.5">
                           <div className="flex items-center gap-2">
-                            <CategoryIcon categoryId={item.categoryId} size="sm" />
+                            <CategoryIcon categoryId={item.categoryId} categoryMeta={item.categoryMeta} size="sm" />
                             <span className="text-sm font-medium text-white">{item.name}</span>
                           </div>
                           <div className="text-right">

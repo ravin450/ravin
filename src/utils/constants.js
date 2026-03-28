@@ -6,6 +6,7 @@ export const EXPENSE_CATEGORIES = [
   { id: 'educacao',    label: 'Educação',    color: '#06b6d4' },
   { id: 'lazer',       label: 'Lazer',       color: '#ec4899' },
   { id: 'roupas',      label: 'Roupas',      color: '#a855f7' },
+  { id: 'beleza',      label: 'Beleza',      color: '#f43f5e' },
   { id: 'outros',      label: 'Outros',      color: '#6b7280' },
 ]
 

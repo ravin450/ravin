@@ -9,6 +9,7 @@ import Budget from './pages/Budget'
 import Goals from './pages/Goals'
 import Voice from './pages/Voice'
 import Welcome from './pages/Welcome'
+import Installments from './pages/Installments'
 
 function RequireHousehold({ children }) {
   const id = localStorage.getItem('cultivei_household_id')
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="orcamento" element={<Budget />} />
             <Route path="metas" element={<Goals />} />
             <Route path="voz" element={<Voice />} />
+            <Route path="parcelas" element={<Installments />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
