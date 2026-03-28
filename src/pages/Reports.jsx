@@ -8,6 +8,7 @@ import { useFinance } from '../context/FinanceContext'
 import { ALL_CATEGORIES, EXPENSE_CATEGORIES } from '../utils/constants'
 import { formatCurrency, formatCurrencyCompact, formatPercent } from '../utils/formatters'
 import PageHeader from '../components/PageHeader'
+import CategoryIcon from '../components/CategoryIcon'
 
 const CHART_COLORS = ['#C9A84C','#E2C472','#A87C2A','#D4A843','#F0D080','#8A6820','#BF9A40','#E8C060','#9A7030','#D0B050']
 
@@ -61,7 +62,7 @@ export default function Reports() {
   const pieData = categoryBreakdown
     .map(({ category, amount }) => {
       const cat = ALL_CATEGORIES.find((c) => c.id === category)
-      return { name: cat?.label || category, value: amount, color: cat?.color || '#666', icon: cat?.icon || '📦' }
+      return { name: cat?.label || category, value: amount, color: cat?.color || '#666', categoryId: category }
     })
     .sort((a, b) => b.value - a.value)
 
@@ -253,7 +254,7 @@ export default function Reports() {
                       <div key={item.name}>
                         <div className="flex items-center justify-between mb-1.5">
                           <div className="flex items-center gap-2">
-                            <span className="text-base">{item.icon}</span>
+                            <CategoryIcon categoryId={item.categoryId} size="sm" />
                             <span className="text-sm font-medium text-white">{item.name}</span>
                           </div>
                           <div className="text-right">
@@ -409,7 +410,7 @@ export default function Reports() {
                       <div key={cat.id}>
                         <div className="flex items-center justify-between mb-1.5">
                           <div className="flex items-center gap-2">
-                            <span>{cat.icon}</span>
+                            <CategoryIcon categoryId={cat.id} size="sm" />
                             <span className="text-xs font-medium text-white">{cat.label}</span>
                           </div>
                           <div className="flex items-center gap-2">

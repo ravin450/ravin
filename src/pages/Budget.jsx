@@ -4,6 +4,7 @@ import { useFinance } from '../context/FinanceContext'
 import { EXPENSE_CATEGORIES } from '../utils/constants'
 import { formatCurrency, formatPercent } from '../utils/formatters'
 import PageHeader from '../components/PageHeader'
+import CategoryIcon from '../components/CategoryIcon'
 
 function BudgetModal({ isOpen, onClose, budget = null }) {
   const { addBudget, updateBudget, budgets } = useFinance()
@@ -55,19 +56,19 @@ function BudgetModal({ isOpen, onClose, budget = null }) {
             <label className="label">Categoria</label>
             {isEditing ? (
               <div className="input-field flex items-center gap-2 opacity-70 cursor-not-allowed">
-                {EXPENSE_CATEGORIES.find((c) => c.id === form.category)?.icon}{' '}
+                <CategoryIcon categoryId={form.category} size="sm" />
                 {EXPENSE_CATEGORIES.find((c) => c.id === form.category)?.label}
               </div>
             ) : (
               <div className="grid grid-cols-4 gap-2">
                 {availableCategories.map((cat) => (
                   <button key={cat.id} type="button" onClick={() => setForm({ ...form, category: cat.id })}
-                    className="flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all"
+                    className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl border transition-all"
                     style={{
                       borderColor: form.category === cat.id ? 'var(--gold)' : 'rgba(255,255,255,0.06)',
-                      background: form.category === cat.id ? 'rgba(201,168,76,0.1)' : 'var(--surface-2)'
+                      background: form.category === cat.id ? 'rgba(201,168,76,0.08)' : 'var(--surface-2)'
                     }}>
-                    <span className="text-xl">{cat.icon}</span>
+                    <CategoryIcon categoryId={cat.id} size="sm" />
                     <span className="text-[10px] font-medium text-center leading-tight"
                       style={{ color: form.category === cat.id ? 'var(--gold)' : 'var(--text-muted)' }}>
                       {cat.label}
@@ -118,10 +119,7 @@ function BudgetCard({ budget, onEdit }) {
     <div className="card" style={{ borderColor: budget.isOver ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)' }}>
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl flex items-center justify-center text-xl"
-            style={{ background: (cat?.color || '#666') + '18', border: `1px solid ${cat?.color || '#666'}25` }}>
-            {cat?.icon || '📦'}
-          </div>
+          <CategoryIcon categoryId={budget.category} size="lg" />
           <div>
             <p className="font-semibold text-white">{cat?.label || budget.category}</p>
             <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Limite: {formatCurrency(budget.limit)}</p>

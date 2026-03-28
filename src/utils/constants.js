@@ -1,19 +1,19 @@
 export const EXPENSE_CATEGORIES = [
-  { id: 'alimentacao', label: 'Alimentação', icon: '🍽️', color: '#f97316' },
-  { id: 'transporte', label: 'Transporte', icon: '🚗', color: '#3b82f6' },
-  { id: 'moradia', label: 'Moradia', icon: '🏠', color: '#8b5cf6' },
-  { id: 'saude', label: 'Saúde', icon: '❤️', color: '#ef4444' },
-  { id: 'educacao', label: 'Educação', icon: '📚', color: '#06b6d4' },
-  { id: 'lazer', label: 'Lazer', icon: '🎮', color: '#ec4899' },
-  { id: 'roupas', label: 'Roupas', icon: '👗', color: '#a855f7' },
-  { id: 'outros', label: 'Outros', icon: '📦', color: '#6b7280' },
+  { id: 'alimentacao', label: 'Alimentação', color: '#f97316' },
+  { id: 'transporte',  label: 'Transporte',  color: '#3b82f6' },
+  { id: 'moradia',     label: 'Moradia',     color: '#8b5cf6' },
+  { id: 'saude',       label: 'Saúde',       color: '#ef4444' },
+  { id: 'educacao',    label: 'Educação',    color: '#06b6d4' },
+  { id: 'lazer',       label: 'Lazer',       color: '#ec4899' },
+  { id: 'roupas',      label: 'Roupas',      color: '#a855f7' },
+  { id: 'outros',      label: 'Outros',      color: '#6b7280' },
 ]
 
 export const INCOME_CATEGORIES = [
-  { id: 'salario', label: 'Salário', icon: '💼', color: '#10b981' },
-  { id: 'freelance', label: 'Freelance', icon: '💻', color: '#059669' },
-  { id: 'investimentos', label: 'Investimentos', icon: '📈', color: '#0d9488' },
-  { id: 'outros_receita', label: 'Outros', icon: '💰', color: '#6b7280' },
+  { id: 'salario',        label: 'Salário',        color: '#10b981' },
+  { id: 'freelance',      label: 'Freelance',      color: '#059669' },
+  { id: 'investimentos',  label: 'Investimentos',  color: '#0d9488' },
+  { id: 'outros_receita', label: 'Outros',         color: '#6b7280' },
 ]
 
 export const ALL_CATEGORIES = [...INCOME_CATEGORIES, ...EXPENSE_CATEGORIES]

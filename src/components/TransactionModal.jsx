@@ -3,6 +3,7 @@ import { X, Check, Zap, RefreshCw } from 'lucide-react'
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../utils/constants'
 import { useFinance } from '../context/FinanceContext'
 import { parseSmartInput } from '../utils/smartInput'
+import CategoryIcon from './CategoryIcon'
 
 const defaultForm = {
   type: 'expense', amount: '', category: '', description: '',
@@ -176,12 +177,12 @@ export default function TransactionModal({ isOpen, onClose, transaction = null }
                 {categories.map((cat) => (
                   <button key={cat.id} type="button"
                     onClick={() => setForm({ ...form, category: cat.id })}
-                    className="flex flex-col items-center gap-1 p-2.5 rounded-lg border transition-all duration-150"
+                    className="flex flex-col items-center gap-1.5 p-2.5 rounded-lg border transition-all duration-150"
                     style={{
-                      background: form.category === cat.id ? 'rgba(59,130,246,0.12)' : 'var(--surface-2)',
-                      borderColor: form.category === cat.id ? 'rgba(59,130,246,0.4)' : 'rgba(255,255,255,0.06)',
+                      background: form.category === cat.id ? 'rgba(59,130,246,0.08)' : 'var(--surface-2)',
+                      borderColor: form.category === cat.id ? 'rgba(59,130,246,0.35)' : 'rgba(255,255,255,0.06)',
                     }}>
-                    <span className="text-lg">{cat.icon}</span>
+                    <CategoryIcon categoryId={cat.id} size="sm" />
                     <span className="text-[10px] font-medium text-center leading-tight" style={{ color: 'var(--text-dim)' }}>{cat.label}</span>
                   </button>
                 ))}

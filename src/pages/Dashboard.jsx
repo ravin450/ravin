@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react'
-import { Plus, TrendingUp, TrendingDown, ArrowRight, LogOut, Activity } from 'lucide-react'
+import { Plus, TrendingUp, TrendingDown, ArrowRight, LogOut, Activity, Sparkles, Award } from 'lucide-react'
+import CategoryIcon from '../components/CategoryIcon'
 import { Link } from 'react-router-dom'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts'
 import { useFinance } from '../context/FinanceContext'
@@ -114,7 +115,7 @@ export default function Dashboard() {
       const cat = ALL_CATEGORIES.find(c => c.id === top.category)
       if (cat) {
         list.push({
-          icon: cat.icon,
+          iconEl: <CategoryIcon categoryId={top.category} size="sm" />,
           text: `Maior gasto: ${cat.label} com ${formatCurrency(top.amount)}`,
           color: '#C9A84C',
           bg: 'rgba(201,168,76,0.08)',
@@ -129,12 +130,15 @@ export default function Dashboard() {
     if (curr && prev && prev.despesas > 0) {
       const change = ((curr.despesas - prev.despesas) / prev.despesas) * 100
       if (Math.abs(change) >= 5) {
+        const color = change > 0 ? '#EF4444' : '#22C55E'
         list.push({
-          icon: change > 0 ? '📈' : '📉',
+          iconEl: change > 0
+            ? <TrendingUp size={14} color={color} />
+            : <TrendingDown size={14} color={color} />,
           text: change > 0
             ? `Despesas ${change.toFixed(0)}% maiores que o mês passado`
             : `Despesas ${Math.abs(change).toFixed(0)}% menores que o mês passado`,
-          color: change > 0 ? '#EF4444' : '#22C55E',
+          color,
           bg: change > 0 ? 'rgba(239,68,68,0.08)' : 'rgba(34,197,94,0.08)',
           border: change > 0 ? 'rgba(239,68,68,0.2)' : 'rgba(34,197,94,0.2)',
         })
@@ -151,7 +155,7 @@ export default function Dashboard() {
       const wantPct = (wantTotal / stats.monthlyExpenses) * 100
       if (wantPct > 30) {
         list.push({
-          icon: '✨',
+          iconEl: <Sparkles size={14} color="#A855F7" />,
           text: `${wantPct.toFixed(0)}% dos gastos são por desejo (${formatCurrency(wantTotal)})`,
           color: '#A855F7',
           bg: 'rgba(168,85,247,0.08)',
@@ -163,7 +167,7 @@ export default function Dashboard() {
     // Poupança positiva
     if (stats.savingsRate >= 20) {
       list.push({
-        icon: '🏆',
+        iconEl: <Award size={14} color="#22C55E" />,
         text: `Poupando ${formatPercent(stats.savingsRate)} da renda. Continue assim!`,
         color: '#22C55E',
         bg: 'rgba(34,197,94,0.08)',
@@ -259,9 +263,9 @@ export default function Dashboard() {
         <div className="px-4 mt-3">
           <div className="space-y-2">
             {insights.map((ins, i) => (
-              <div key={i} className="rounded-xl px-3 py-2.5 flex items-start gap-2.5"
+              <div key={i} className="rounded-xl px-3 py-2.5 flex items-center gap-2.5"
                 style={{ background: ins.bg, border: `1px solid ${ins.border}` }}>
-                <span className="text-base leading-none mt-0.5">{ins.icon}</span>
+                <div className="flex-shrink-0 flex items-center justify-center w-6 h-6">{ins.iconEl}</div>
                 <p className="text-xs font-medium leading-snug" style={{ color: ins.color }}>{ins.text}</p>
               </div>
             ))}
