@@ -1,12 +1,12 @@
-import React, { useState } from 'react'
-import { Plus, TrendingUp, TrendingDown, ArrowRight, LogOut } from 'lucide-react'
+import React, { useState, useMemo } from 'react'
+import { Plus, TrendingUp, TrendingDown, ArrowRight, LogOut, Activity } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts'
 import { useFinance } from '../context/FinanceContext'
 import { formatCurrency, formatCurrencyCompact, formatPercent } from '../utils/formatters'
 import TransactionModal from '../components/TransactionModal'
 import TransactionItem from '../components/TransactionItem'
-import { MONTHS_PT } from '../utils/constants'
+import { MONTHS_PT, ALL_CATEGORIES } from '../utils/constants'
 
 function SavingsRing({ rate }) {
   const clamp = Math.min(Math.max(rate, 0), 100)
@@ -32,6 +32,33 @@ function SavingsRing({ rate }) {
   )
 }
 
+function HealthGauge({ score }) {
+  const r = 28, cx = 36, cy = 36
+  const circ = 2 * Math.PI * r
+  const offset = circ - (score / 100) * circ
+  const color = score >= 80 ? '#22C55E' : score >= 60 ? '#C9A84C' : score >= 40 ? '#F97316' : '#EF4444'
+  const label = score >= 80 ? 'Excelente' : score >= 60 ? 'Bom' : score >= 40 ? 'Regular' : 'Atenção'
+  return (
+    <div className="flex items-center gap-3">
+      <svg width="72" height="72" viewBox="0 0 72 72">
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="6"/>
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth="6"
+          strokeDasharray={circ} strokeDashoffset={offset}
+          strokeLinecap="round" transform={`rotate(-90 ${cx} ${cy})`}
+          style={{ transition: 'stroke-dashoffset 0.8s ease' }}
+        />
+        <text x={cx} y={cy - 3} textAnchor="middle" fill="white" fontSize="14" fontWeight="800">{score}</text>
+        <text x={cx} y={cy + 11} textAnchor="middle" fill="#555" fontSize="7" fontWeight="500">/100</text>
+      </svg>
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: 'var(--text-muted)' }}>Saúde Financeira</p>
+        <p className="text-base font-bold" style={{ color }}>{label}</p>
+        <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Score do mês</p>
+      </div>
+    </div>
+  )
+}
+
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
@@ -48,7 +75,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export default function Dashboard() {
-  const { stats, monthlyChartData, transactions } = useFinance()
+  const { stats, monthlyChartData, transactions, categoryBreakdown } = useFinance()
   const [modalOpen, setModalOpen] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState(null)
 
@@ -63,6 +90,89 @@ export default function Dashboard() {
   const handleClose = () => { setModalOpen(false); setEditingTransaction(null) }
 
   const recent = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5)
+
+  // ── Score de saúde financeira ──
+  const healthScore = useMemo(() => {
+    let score = 0
+    if (stats.monthlyIncome > 0) score += 20
+    if (stats.monthlyBalance >= 0) score += 25
+    if (stats.savingsRate >= 10) score += 15
+    if (stats.savingsRate >= 20) score += 10
+    if (stats.totalBalance > 0) score += 20
+    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+    if (transactions.some(t => new Date(t.date).getTime() > weekAgo)) score += 10
+    return Math.min(100, score)
+  }, [stats, transactions])
+
+  // ── Insights inteligentes ──
+  const insights = useMemo(() => {
+    const list = []
+
+    // Maior categoria de despesa
+    if (categoryBreakdown.length > 0) {
+      const top = [...categoryBreakdown].sort((a, b) => b.amount - a.amount)[0]
+      const cat = ALL_CATEGORIES.find(c => c.id === top.category)
+      if (cat) {
+        list.push({
+          icon: cat.icon,
+          text: `Maior gasto: ${cat.label} com ${formatCurrency(top.amount)}`,
+          color: '#C9A84C',
+          bg: 'rgba(201,168,76,0.08)',
+          border: 'rgba(201,168,76,0.2)',
+        })
+      }
+    }
+
+    // Comparação com mês anterior
+    const curr = monthlyChartData[5]
+    const prev = monthlyChartData[4]
+    if (curr && prev && prev.despesas > 0) {
+      const change = ((curr.despesas - prev.despesas) / prev.despesas) * 100
+      if (Math.abs(change) >= 5) {
+        list.push({
+          icon: change > 0 ? '📈' : '📉',
+          text: change > 0
+            ? `Despesas ${change.toFixed(0)}% maiores que o mês passado`
+            : `Despesas ${Math.abs(change).toFixed(0)}% menores que o mês passado`,
+          color: change > 0 ? '#EF4444' : '#22C55E',
+          bg: change > 0 ? 'rgba(239,68,68,0.08)' : 'rgba(34,197,94,0.08)',
+          border: change > 0 ? 'rgba(239,68,68,0.2)' : 'rgba(34,197,94,0.2)',
+        })
+      }
+    }
+
+    // Alerta de gastos com desejo
+    const wantTotal = transactions
+      .filter(t => t.type === 'expense' && t.necessity === 'want' &&
+        new Date(t.date).getMonth() === now.getMonth() &&
+        new Date(t.date).getFullYear() === now.getFullYear())
+      .reduce((s, t) => s + t.amount, 0)
+    if (wantTotal > 0 && stats.monthlyExpenses > 0) {
+      const wantPct = (wantTotal / stats.monthlyExpenses) * 100
+      if (wantPct > 30) {
+        list.push({
+          icon: '✨',
+          text: `${wantPct.toFixed(0)}% dos gastos são por desejo (${formatCurrency(wantTotal)})`,
+          color: '#A855F7',
+          bg: 'rgba(168,85,247,0.08)',
+          border: 'rgba(168,85,247,0.2)',
+        })
+      }
+    }
+
+    // Poupança positiva
+    if (stats.savingsRate >= 20) {
+      list.push({
+        icon: '🏆',
+        text: `Poupando ${formatPercent(stats.savingsRate)} da renda. Continue assim!`,
+        color: '#22C55E',
+        bg: 'rgba(34,197,94,0.08)',
+        border: 'rgba(34,197,94,0.2)',
+      })
+    }
+
+    return list.slice(0, 3)
+  }, [stats, categoryBreakdown, monthlyChartData, transactions])
 
   return (
     <div className="min-h-screen bg-page">
@@ -131,6 +241,33 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* ── Score de Saúde Financeira ─── */}
+      <div className="px-4 mt-3">
+        <div className="rounded-2xl p-4" style={{ background: 'var(--surface)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="flex items-center justify-between">
+            <HealthGauge score={healthScore} />
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(201,168,76,0.1)' }}>
+              <Activity size={14} color="var(--gold)" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Insights ─── */}
+      {insights.length > 0 && (
+        <div className="px-4 mt-3">
+          <div className="space-y-2">
+            {insights.map((ins, i) => (
+              <div key={i} className="rounded-xl px-3 py-2.5 flex items-start gap-2.5"
+                style={{ background: ins.bg, border: `1px solid ${ins.border}` }}>
+                <span className="text-base leading-none mt-0.5">{ins.icon}</span>
+                <p className="text-xs font-medium leading-snug" style={{ color: ins.color }}>{ins.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── Add Button ─── */}
       <div className="px-4 mt-4">

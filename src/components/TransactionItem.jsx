@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2, RefreshCw } from 'lucide-react'
 import { ALL_CATEGORIES } from '../utils/constants'
 import { formatCurrency, formatDateShort } from '../utils/formatters'
 import { useFinance } from '../context/FinanceContext'
@@ -21,20 +21,35 @@ export default function TransactionItem({ transaction, onEdit }) {
       style={{ background: 'var(--surface)', border: '1px solid rgba(255,255,255,0.05)' }}
       onClick={() => setShowActions(!showActions)}>
 
-      <div className="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0"
+      <div className="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0 relative"
         style={{
           background: isIncome ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
           border: `1px solid ${isIncome ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'}`
         }}>
         {category?.icon || '📦'}
+        {transaction.recurring && (
+          <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center"
+            style={{ background: '#131720', border: '1px solid rgba(201,168,76,0.3)' }}>
+            <RefreshCw size={8} style={{ color: '#C9A84C' }} />
+          </span>
+        )}
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-white text-sm truncate leading-tight">
-          {transaction.description || category?.label || 'Transação'}
-        </p>
-        <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <p className="font-semibold text-white text-sm truncate leading-tight">
+            {transaction.description || category?.label || 'Transação'}
+          </p>
+          {!isIncome && transaction.necessity === 'want' && (
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
+              style={{ background: 'rgba(168,85,247,0.15)', color: '#A855F7' }}>
+              Desejo
+            </span>
+          )}
+        </div>
+        <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
           {formatDateShort(transaction.date)} · {category?.label || 'Outros'}
+          {transaction.addedBy ? ` · ${transaction.addedBy}` : ''}
         </p>
       </div>
 
