@@ -1,11 +1,32 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /households/{householdId}/{document=**} {
-      allow read, write: if true;
+
+    // Household principal: leitura livre (ID é UUID — difícil de adivinhar)
+    // Criação permitida com campos obrigatórios; atualização só de members; deleção bloqueada
+    match /households/{householdId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['code', 'email', 'members', 'createdAt'])
+                   && request.resource.data.members is list
+                   && request.resource.data.members.size() <= 10
+                   && request.resource.data.email is string;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+                   && request.resource.data.members.size() <= 10;
+      allow delete: if false;
     }
+
+    // Subcoleções (transações, orçamentos, metas): acesso completo dentro do household
+    match /households/{householdId}/{subcollection}/{docId} {
+      allow read, create, update: if subcollection in ['transactions', 'budgets', 'goals'];
+      allow delete: if subcollection in ['transactions', 'budgets', 'goals'];
+    }
+
+    // Códigos: apenas criação e leitura — nunca sobrescrever ou deletar
     match /codes/{code} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['householdId'])
+                   && request.resource.data.householdId is string;
+      allow update, delete: if false;
     }
   }
 }
